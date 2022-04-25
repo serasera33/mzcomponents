@@ -1,0 +1,19 @@
+[package]
+version = "0.1.0"
+name = "shared"
+authors = [" "]
+description = "mz components"
+license = "MIT"
+readme = "../readme.md"
+edition = "2021"
+
+[dependencies]
+moonlight = { path = "../moonlight" }
+futures-signals = "0.3.24"
+pulldown-cmark = "0.9.1"
+strum = "0.24"
+strum_macros = "0.24"
+
+[features]
+frontend = ["moonlight/frontend"]
+backend = ["moonlight/backend"]

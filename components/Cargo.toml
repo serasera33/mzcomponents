@@ -1,0 +1,16 @@
+[package]
+version = "0.1.0"
+name = "components"
+authors = [" "]
+description = "mz components"
+license = "MIT"
+readme = "../readme.md"
+edition = "2021"
+
+[dependencies]
+zoon = { git = "https://github.com/MoonZoon/MoonZoon", rev = "2f31839d5a2cd4fb687f9daf23923a903acb4fe6" }
+web-sys = { version = "0.3.56", features = ['HtmlSelectElement', 'HtmlCollection']}
+pulldown-cmark = "0.9.1"
+
+
+[features]
