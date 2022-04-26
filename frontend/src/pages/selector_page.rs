@@ -20,7 +20,7 @@ pub fn all_favs() -> &'static MutableVec<Favorites> {
                                      Favorites {
                                          name: "Chaplin".to_string(),
                                          colors: vec!["Green".to_string()],
-                                         dishes: vec!["Spaghetti".to_string(), "Pizza".to_string()],
+                                         dishes: vec!["Risotto".to_string(), "Pizza".to_string()],
                                      }])
 }
 
@@ -66,6 +66,8 @@ fn fav_item(fav: Favorites) -> impl Element {
             zoon::println!("Selected {:?}", fav);
             current_fav().replace(fav);
             let lock = current_fav().lock_mut();
+            selected_dishes().lock_mut().clear();
+            selected_colors().lock_mut().clear();
             lock.colors.iter().for_each(|x| selected_colors().lock_mut().push_cloned((*x).clone()));
             lock.dishes.iter().for_each(|x| selected_dishes().lock_mut().push_cloned((*x).clone()));
         })
@@ -128,5 +130,7 @@ fn fav_entry() -> impl Element {
             .to_component("Favorite Dishes"))
         .item(button_simple("Clear",|| {
             current_fav().replace( Favorites::init());
+            selected_colors().lock_mut().clear();
+            selected_dishes().lock_mut().clear();
         }))
 }

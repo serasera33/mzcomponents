@@ -44,32 +44,43 @@ impl<'a> Selector {
 
     pub fn checked_items_signal(
         &'static self,
-        vec: impl SignalVec<Item=String>,
+        vec: impl SignalVec<Item = String> + Unpin + 'static
     ) -> &'static Selector {
         zoon::println!("checked signal");
-        let x = Task::start_droppable({
+        let x = vec.for_each(move |checked: VecDiff<String>| {
             let lock = self.available_options.lock_mut();
-            let y = vec.for_each(move |checked: VecDiff<String>| {
-                match checked {
-                    VecDiff::Replace { values } => values.iter().for_each(|item| {
-                        lock.iter().for_each(|checklist_item| {
-                            if checklist_item.name.eq(item) {
-                                checklist_item.is_checked.set_neq(true)
-                            }
-                        })
-                    }),
-                    VecDiff::InsertAt { .. } => {}
-                    VecDiff::UpdateAt { .. } => {}
-                    VecDiff::RemoveAt { .. } => {}
-                    VecDiff::Move { .. } => {}
-                    VecDiff::Push { .. } => {}
-                    VecDiff::Pop { .. } => {}
-                    VecDiff::Clear { .. } => {}
+            match checked {
+                VecDiff::Replace { values } => {
+                    zoon::println!("replace");
+                    values.iter().for_each(|item| {
+                    lock.iter().for_each(|checklist_item| {
+                        if checklist_item.name.eq(item) {
+                            checklist_item.is_checked.set_neq(true)
+                        }
+                    })
+                })},
+                VecDiff::InsertAt { .. } => {}
+                VecDiff::UpdateAt { .. } => {}
+                VecDiff::RemoveAt { .. } => {}
+                VecDiff::Move { .. } => {}
+                VecDiff::Push { value } => {
+                    zoon::println!("push");
+                    lock.iter().for_each(|checklist_item| {
+                        if checklist_item.name.eq(&value) {
+                            checklist_item.is_checked.set_neq(true)
+                        }
+                    })
                 }
-                async {}
-            });
+                VecDiff::Pop { .. } => {}
+                VecDiff::Clear { .. } => {
+                    zoon::println!("clear");
+                    lock.iter().for_each(|checklist_item| {
+                        checklist_item.is_checked.set_neq(false)
+                    })}
+            }
             async {}
         });
+        let t = Task::start(x);
         self
     }
 
@@ -112,7 +123,8 @@ impl<'a> Selector {
         })
     }
 
-    fn checklist_item(&'static self, item: Arc<ChecklistItem>) -> impl Element {
+    fn checklist_item(&'static self,
+                      item: Arc<ChecklistItem>) -> impl Element {
         static ACTIVE_ICON: &str = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23ededed%22%20stroke-width%3D%223%22/%3E%3C/svg%3E";
         static COMPLETED_ICON: &str = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E";
         let item_name = String::from(&item.name);
